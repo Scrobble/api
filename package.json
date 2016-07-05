@@ -1,0 +1,16 @@
+{
+  "name": "scrobble-api",
+  "version": "1.0.0",
+  "description": "Scrobble api for Netflix, Steam, etc",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "netflix",
+    "steam",
+    "scrobble"
+  ],
+  "author": "Paulo Menezes",
+  "license": "MIT"
+}
