@@ -17,6 +17,8 @@
     "cheerio": "^0.20.0",
     "express": "^4.14.0",
     "firebase": "^3.1.0",
+    "goodreads": "0.0.4",
+    "mongoose": "^4.5.3",
     "request": "^2.72.0",
     "rethinkdbdash": "^2.3.16"
   }

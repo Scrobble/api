@@ -3,53 +3,29 @@
 const express = require('express');
 const app = express();
 
-const request = require('request');
-const rethinkdb = require('rethinkdbdash')();
-//rethinkdb.dbCreate('scrobble').run();
-//rethinkdb.db('scrobble').tableCreate('user_games').run();
-// rethinkdb.db('scrobble').table('user').insert({
-// 	id: 1,
-// 	name: 'Paulo'
-// }).run();
+global.request = require('request');
 
-const STEAM_KEY = 'CFEBF76E285C930F8999CA701716C81A';
-const STEAM_URL = 'http://api.steampowered.com/';
-const STEAM_GET_USER = `${ STEAM_URL }ISteamUser/ResolveVanityURL/v0001/?key=${ STEAM_KEY }&vanityurl=`;
+var firebase = require("firebase");
+firebase.initializeApp({
+	databaseURL: "https://scrooble-d7508.firebaseio.com",
+	serviceAccount: "Scrobble-ce91ef246029.json"
+});
 
-let STEAM_USER = '';
+const mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/scrobble');
+
+global.database = firebase.database();
+global.tables = {
+	users: global.database.ref("users"),
+	games: global.database.ref('games')
+};
 
 app.get('/', (req, res) => {
-	res.send('Access /steam/yourusername for more information');
+	res.send('Access /steam or /goodreads');
 });
 
-app.get('/netflix', (req, res) => {
-
-});
-
-app.get('/steam/:user', (req, res) => {
-	request(STEAM_GET_USER + req.params.user, (error, response, body) => {
-		if (!error && response.statusCode == 200) {
-			let data = JSON.parse(body);
-
-			STEAM_USER = data.response.steamid;
-
-			const STEAM_OWNED_GAMES = `${ STEAM_URL }IPlayerService/GetOwnedGames/v0001/?key=${ STEAM_KEY }&steamid=${ STEAM_USER }&format=json`;
-
-			request(STEAM_OWNED_GAMES, (error, response, body) => {
-				let apps = JSON.parse(body);
-				for (var i = 0; i < apps.response.games.length; i++) {
-					console.log(apps.response.games[i].appid);
-					rethinkdb.db('scrobble').table('user_games').insert({
-						game_id: apps.response.games[i].appid,
-						playtime_forever: apps.response.games[i].playtime_forever,
-						platform: 'steam'
-					}).run();
-				}
-				res.send(body);
-			})
-		}
-	});
-});
+app.use('/steam', require('./routes/steam'));
+app.use('/goodreads', require('./routes/goodreads'));
 
 app.listen(3000, () => {
 	console.log('Scrobble API!');
