@@ -11,12 +11,12 @@ router.get('/', (req, res) => {
 	})
 });
 
-router.get('/:user/:steam', (req, res) => {
-	global.tables.users.child(req.params.user).set({
-		steam: req.params.steam
+router.post('/', (req, res) => {
+	global.tables.users.child(req.body.uid).update({
+		steam: req.body.user
 	});
 
-	global.request(STEAM_GET_USER + req.params.steam, (error, response, body) => {
+	global.request(STEAM_GET_USER + req.body.user, (error, response, body) => {
 		if (!error && response.statusCode == 200) {
 			let data = JSON.parse(body);
 			let STEAM_USER = data.response.steamid;
@@ -25,8 +25,8 @@ router.get('/:user/:steam', (req, res) => {
 
 			global.request(STEAM_OWNED_GAMES, (error, response, body) => {
 				let apps = JSON.parse(body);
-				global.tables.users.child(req.params.user).update({
-					steam_games: apps.response.games
+				global.tables.games.child(req.body.uid).set({
+					library: apps.response.games
 				});
 				res.send(body);
 			})

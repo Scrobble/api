@@ -7,12 +7,12 @@ const goodreads = new GoodReads.client({ 'key': 'WYhzQzXHjay8k1prEFk4pw', 'secre
 let oauthToken = '';
 let oauthTokenSecret = '';
 
-router.get('/oauth', (req, res) => {
+router.get('/oauth/:user', (req, res) => {
 	goodreads.requestToken((callback) => {
 		let data = {
 			oauthToken: callback.oauthToken, 
 			oauthTokenSecret: callback.oauthTokenSecret,
-			url: callback.url.replace('localhost:3000/callback', 'localhost:3000/goodreads/oauth/callback')
+			url: callback.url.replace('localhost:3000/callback', 'localhost:3000/api/goodreads/oauth/callback')
 		};
 
 		oauthToken = data.oauthToken;
@@ -22,9 +22,9 @@ router.get('/oauth', (req, res) => {
 	})
 });
 
-router.get('/oauth/callback', (req, res) => {
+router.get('/oauth/callback/:uid', (req, res) => {
 	goodreads.processCallback(oauthToken, oauthTokenSecret, req.query.authorize, (callback) => {
-		global.tables.users.child('paulomenezes').update({
+		global.tables.users.child(req.params.uid).update({
 			goodreads: callback.userid
 		});
 
@@ -32,19 +32,45 @@ router.get('/oauth/callback', (req, res) => {
 	});
 });
 
-router.get('/shelves', (req, res) => {
-	global.tables.users.child('paulomenezes').child('goodreads').on('value', (user) => {
+router.post('/shelves', (req, res) => {
+	let index = 0;
+	let books = {};
+
+	global.tables.users.child(req.body.user).child('goodreads').on('value', (user) => {
 		goodreads.getShelves(user.val(), (shelves) => {
-			goodreads.getSingleShelf({
-				'userID': user.val(),
-				'shelf': shelves.GoodreadsResponse.shelves[0].user_shelf[0].id[0]._,
-				'page': 1,
-				'per_page': 100
-			}, (shelf) => {
-				res.send(shelf);
-			});
+			getBooks(shelves, index, user);
 		});
 	});
+
+	function getBooks (shelves, index, user) {
+		let name = shelves.GoodreadsResponse.shelves[0].user_shelf[index].name[0];
+
+		if (!books[name]) {
+			books[name] = [];
+		}
+
+		console.log(name);
+
+		goodreads.getSingleShelf({
+			'userID': user.val(),
+			'shelf': name,
+			'page': 1,
+			'per_page': 100
+		}, (shelf) => {
+			
+			for (var i = 0; i < shelf.GoodreadsResponse.books[0].book.length; i++) {
+				books[name].push(shelf.GoodreadsResponse.books[0].book[i].title[0]);
+			}
+
+			index++;
+
+			if (index < shelves.GoodreadsResponse.shelves[0].user_shelf.length) {
+				getBooks(shelves, index, user);
+			} else {
+				res.send(books);
+			}
+		});
+	}
 });
 
 module.exports = router;

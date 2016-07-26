@@ -14,12 +14,16 @@
   "author": "Paulo Menezes",
   "license": "MIT",
   "dependencies": {
+    "body-parser": "^1.15.2",
     "cheerio": "^0.20.0",
+    "cors": "^2.7.1",
     "express": "^4.14.0",
     "firebase": "^3.1.0",
     "goodreads": "0.0.4",
     "mongoose": "^4.5.3",
+    "morgan": "^1.7.0",
     "request": "^2.72.0",
-    "rethinkdbdash": "^2.3.16"
+    "rethinkdbdash": "^2.3.16",
+    "sha512": "0.0.1"
   }
 }
